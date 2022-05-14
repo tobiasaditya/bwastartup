@@ -48,3 +48,37 @@ func (h *userHandler) RegisterUser(c *gin.Context) {
 	response := helper.APIResponse("Account has been registered", http.StatusOK, "success", formatter)
 	c.JSON(http.StatusOK, response)
 }
+
+func (h *userHandler) Login(c *gin.Context) {
+	// Terima input User (email dan password)
+	// Mapping input login ke struct
+	// Parsing ke service untuk cari user dengan email
+	// Jika ketemu, baru verify password
+	var input user.LoginInput
+
+	err := c.ShouldBindJSON(&input)
+
+	if err != nil {
+
+		errors := helper.ErrorValidationResponse(err)
+
+		errorMessage := gin.H{"errors": errors}
+
+		response := helper.APIResponse("Invalid Input", http.StatusUnprocessableEntity, "failed", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	foundUser, err := h.userService.LoginUser(input)
+
+	if err != nil {
+		errorMessage := gin.H{"errors": err.Error()}
+		response := helper.APIResponse("Failed to login", http.StatusUnauthorized, "failed", errorMessage)
+		c.JSON(http.StatusUnauthorized, response)
+		return
+	}
+	formatter := user.FormatUser(foundUser, "tes")
+
+	response := helper.APIResponse("Login success", http.StatusOK, "success", formatter)
+	c.JSON(http.StatusOK, response)
+}
