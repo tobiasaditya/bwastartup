@@ -50,6 +50,7 @@ func main() {
 
 	api.GET("/campaigns", campaignHandler.GetCampaigns)
 	api.GET("/campaigns/:id", campaignHandler.GetCampaign)
+	api.POST("/campaigns", authMiddleware(authService, userSevice), campaignHandler.CreateCampaign)
 
 	router.Run()
 }
@@ -91,7 +92,6 @@ func authMiddleware(authService auth.Service, userService user.Service) gin.Hand
 
 		userId := int(claim["user_id"].(float64))
 
-		fmt.Println(userId)
 		//Get user by Id
 		foundUser, err := userService.GetUserByID(userId)
 		if err != nil {

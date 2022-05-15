@@ -1,8 +1,10 @@
 package handler
 
 import (
+	"bwastartup/auth"
 	"bwastartup/campaign"
 	"bwastartup/helper"
+	"bwastartup/user"
 	"net/http"
 	"strconv"
 
@@ -16,7 +18,8 @@ import (
 // repository akses ke db
 
 type campaignHandler struct {
-	service campaign.Service
+	service     campaign.Service
+	authService auth.Service
 }
 
 func NewCampaignHandler(service campaign.Service) *campaignHandler {
@@ -56,6 +59,41 @@ func (h *campaignHandler) GetCampaign(c *gin.Context) {
 	campaign := campaign.FormatDetailCampaign(foundCampaign)
 
 	response := helper.APIResponse("Success get detail campaign", http.StatusOK, "success", campaign)
+	c.JSON(http.StatusOK, response)
+
+}
+
+func (h *campaignHandler) CreateCampaign(c *gin.Context) {
+	var input campaign.CreateCampaignInput
+	err := c.ShouldBindJSON(&input)
+
+	if err != nil {
+
+		errors := helper.ErrorValidationResponse(err)
+
+		errorMessage := gin.H{"errors": errors}
+
+		response := helper.APIResponse("Invalid Input", http.StatusUnprocessableEntity, "failed", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	currentUser := c.MustGet("currentUser").(user.User)
+
+	input.User = currentUser
+
+	createdCampaign, err := h.service.CreateCampaign(input)
+
+	if err != nil {
+		errorMessage := gin.H{"errors": err.Error()}
+		response := helper.APIResponse("Failed to create new campaign", http.StatusBadRequest, "failed", errorMessage)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	campaign := campaign.FormatCampaign(createdCampaign)
+
+	response := helper.APIResponse("Success create new campaign", http.StatusOK, "success", campaign)
 	c.JSON(http.StatusOK, response)
 
 }
