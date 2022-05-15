@@ -33,6 +33,7 @@ func main() {
 	api.POST("/users", userHandler.RegisterUser)
 	api.POST("/user/login", userHandler.Login)
 	api.POST("/user/email", userHandler.CheckEmail)
+	api.POST("/user/avatar", userHandler.UploadAvatar)
 
 	router.Run()
 }
