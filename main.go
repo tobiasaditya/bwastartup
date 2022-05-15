@@ -40,6 +40,7 @@ func main() {
 
 	router := gin.Default()
 	router.Static("/images", "./")
+
 	api := router.Group("/api/v1")
 
 	api.POST("/users", userHandler.RegisterUser)
@@ -48,6 +49,7 @@ func main() {
 	api.POST("/user/avatar", authMiddleware(authService, userSevice), userHandler.UploadAvatar)
 
 	api.GET("/campaigns", campaignHandler.GetCampaigns)
+	api.GET("/campaigns/:id", campaignHandler.GetCampaign)
 
 	router.Run()
 }
