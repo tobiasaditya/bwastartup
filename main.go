@@ -3,10 +3,14 @@ package main
 import (
 	"bwastartup/auth"
 	"bwastartup/handler"
+	"bwastartup/helper"
 	"bwastartup/user"
 	"fmt"
 	"log"
+	"net/http"
+	"strings"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -36,9 +40,58 @@ func main() {
 	api.POST("/users", userHandler.RegisterUser)
 	api.POST("/user/login", userHandler.Login)
 	api.POST("/user/email", userHandler.CheckEmail)
-	api.POST("/user/avatar", userHandler.UploadAvatar)
+	api.POST("/user/avatar", authMiddleware(authService, userSevice), userHandler.UploadAvatar)
 
 	router.Run()
+}
+
+func authMiddleware(authService auth.Service, userService user.Service) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Ambil header, Authorization Bearer tokentokentoken
+		authHeader := c.GetHeader("Authorization")
+
+		if !strings.Contains(authHeader, "Bearer") {
+			response := helper.APIResponse("Unauthorized", http.StatusUnauthorized, "failed", nil)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+			return
+		}
+
+		var tokenString string
+		headerToken := strings.Split(authHeader, " ")
+
+		if len(headerToken) == 2 {
+			tokenString = headerToken[1]
+		}
+
+		// Validasi token
+		token, err := authService.ValidateToken(tokenString)
+		if err != nil {
+			response := helper.APIResponse("Unauthorized", http.StatusUnauthorized, "failed", nil)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+			return
+		}
+
+		//Kalau valid, decode token, buat dapetin claim/payload dari jwt token
+		claim, ok := token.Claims.(jwt.MapClaims)
+
+		if !ok || !token.Valid {
+			response := helper.APIResponse("Unauthorized", http.StatusUnauthorized, "failed", nil)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+			return
+		}
+
+		userId := int(claim["user_id"].(float64))
+
+		//Get user by Id
+		foundUser, err := userService.GetUserByID(userId)
+		if err != nil {
+			response := helper.APIResponse("Unauthorized", http.StatusUnauthorized, "failed", nil)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+			return
+		}
+		c.Set("currentUser", foundUser)
+	}
+
 }
 
 func autoMigrate(db *gorm.DB) {
