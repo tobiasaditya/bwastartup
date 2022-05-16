@@ -17,6 +17,6 @@ type CreateCampaignInput struct {
 
 type CreateCampaignImageInput struct {
 	CampaignID int  `form:"campaign_id" binding:"required"`
-	IsPrimary  bool `form:"is_primary" binding:"required"`
+	IsPrimary  bool `form:"is_primary"` //ga dibikin required, karena default vlaue udah False, kalo ngirim false, dikira ga ngirim
 	User       user.User
 }
