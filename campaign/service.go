@@ -13,6 +13,7 @@ type Service interface {
 	GetCampaign(ID int) (Campaign, error)
 	CreateCampaign(inputCampaign CreateCampaignInput) (Campaign, error)
 	UpdateCampaign(ID int, updateCampaign CreateCampaignInput) (Campaign, error)
+	UploadCampaignImage(input CreateCampaignImageInput, fileLocation string) (CampaignImage, error)
 }
 
 type service struct {
@@ -98,4 +99,42 @@ func (s *service) UpdateCampaign(ID int, updateCampaign CreateCampaignInput) (Ca
 
 	return updatedCampaign, nil
 
+}
+
+func (s *service) UploadCampaignImage(input CreateCampaignImageInput, fileLocation string) (CampaignImage, error) {
+	foundCampaign, err := s.repository.FindByID(input.CampaignID)
+
+	if err != nil {
+		return CampaignImage{}, err
+	}
+
+	//Validasi user, usernya ga boleh beda dengan yang buat campaign
+	if foundCampaign.UserId != input.User.ID {
+		return CampaignImage{}, errors.New("User can't update this campaign")
+	}
+
+	//Handling jika input isPrimary true, cari ke db, images dengan campaignID tersebut, dibikin false
+	if input.IsPrimary {
+		_, err := s.repository.UpdateImageAsNonPrimary(input.CampaignID)
+		if err != nil {
+			return CampaignImage{}, err
+		}
+	}
+
+	// Convert isPrimary jadi int
+	intIsPrimary := 0
+	if input.IsPrimary {
+		intIsPrimary = 1
+	}
+	newCampaignImage := CampaignImage{
+		CampaignId: input.CampaignID,
+		FileName:   fileLocation,
+		IsPrimary:  intIsPrimary,
+	}
+
+	insertedImage, err := s.repository.CreateImage(newCampaignImage)
+	if err != nil {
+		return insertedImage, err
+	}
+	return insertedImage, nil
 }
