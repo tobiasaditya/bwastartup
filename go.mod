@@ -32,4 +32,5 @@ require (
 	github.com/gosimple/slug v1.12.0
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/veritrans/go-midtrans v0.0.0-20210616100512-16326c5eeb00
 )

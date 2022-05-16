@@ -7,6 +7,16 @@ type TransactionFormatter struct {
 	CreatedAt string `json:"created_at"`
 }
 
+type CreateTransactionFormatter struct {
+	ID         int    `json:"id"`
+	CampaignID int    `json:"campaign_id"`
+	UserID     int    `json:"user_id"`
+	Amount     int    `json:"amount"`
+	Status     string `json:"status"`
+	Code       string `json:"code"`
+	PaymentUrl string `json:"payment_url"`
+}
+
 type CampaignTransactionFormatter struct {
 	Name     string `json:"name"`
 	ImageUrl string `json:"image_url"`
@@ -66,4 +76,16 @@ func FormatUserTransactions(transactions []Transaction) []UserTransactionFormatt
 		formatter = append(formatter, FormatUserTransaction(transaction))
 	}
 	return formatter
+}
+
+func FormatCreateTransaction(transaction Transaction) CreateTransactionFormatter {
+	return CreateTransactionFormatter{
+		ID:         transaction.ID,
+		CampaignID: transaction.CampaignID,
+		UserID:     transaction.UserID,
+		Amount:     transaction.Amount,
+		Status:     transaction.Status,
+		Code:       transaction.Code,
+		PaymentUrl: transaction.PaymentUrl,
+	}
 }
