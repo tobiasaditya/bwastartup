@@ -16,3 +16,5 @@ This BE include
 10. Integrate with Midtrans Payment Gateway to monitor its status
 
 INTERESTING PART = Using Midtrans as a payment gateway! Something that is new to me and it is exiciting!
+
+Time consumed = 3 days (Sat, 14 May 2022 until Mon, 16 May 2022)
