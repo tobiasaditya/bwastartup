@@ -89,28 +89,3 @@ func (h *transactionHandler) CreateTransaction(c *gin.Context) {
 	response := helper.APIResponse("Success create transaction", http.StatusOK, "success", format)
 	c.JSON(http.StatusOK, response)
 }
-
-func (h *transactionHandler) NotifyTransaction(c *gin.Context) {
-	input := transaction.TransactionNotificationInput{}
-
-	err := c.ShouldBind(&input)
-	if err != nil {
-		errorMessage := gin.H{"errors": err.Error()}
-
-		response := helper.APIResponse("Failed to notify transaction", http.StatusUnprocessableEntity, "failed", errorMessage)
-		c.JSON(http.StatusUnprocessableEntity, response)
-		return
-	}
-
-	err = h.service.ProcessPayment(input)
-	if err != nil {
-		errorMessage := gin.H{"errors": err.Error()}
-
-		response := helper.APIResponse("Failed to notify transaction", http.StatusBadRequest, "failed", errorMessage)
-		c.JSON(http.StatusBadRequest, response)
-		return
-	}
-
-	c.JSON(http.StatusOK, input)
-
-}
