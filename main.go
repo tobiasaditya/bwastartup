@@ -5,6 +5,7 @@ import (
 	"bwastartup/campaign"
 	"bwastartup/handler"
 	"bwastartup/helper"
+	"bwastartup/transaction"
 	"bwastartup/user"
 	"fmt"
 	"log"
@@ -38,6 +39,10 @@ func main() {
 	campaignService := campaign.NewService(campaignRepository)
 	campaignHandler := handler.NewCampaignHandler(campaignService)
 
+	transactionRepository := transaction.NewRepository(db)
+	transactionService := transaction.NewService(transactionRepository, campaignRepository)
+	transactionHandler := handler.NewTransactionHandler(transactionService)
+
 	router := gin.Default()
 	router.Static("/images", "./")
 
@@ -53,6 +58,8 @@ func main() {
 	api.POST("/campaigns", authMiddleware(authService, userSevice), campaignHandler.CreateCampaign)
 	api.PUT("/campaigns/:id", authMiddleware(authService, userSevice), campaignHandler.UpdateCampaign)
 	api.POST("/campaign-images", authMiddleware(authService, userSevice), campaignHandler.UploadCampaignImage)
+
+	api.GET("/campaigns/:id/transactions", authMiddleware(authService, userSevice), transactionHandler.GetCampaignTransactions)
 
 	router.Run()
 }
