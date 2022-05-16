@@ -3,11 +3,13 @@ package transaction
 import (
 	"bwastartup/campaign"
 	"errors"
+	"time"
 )
 
 type Service interface {
 	GetTransactionsByCampaignID(input GetCampaignTransactionsInput) ([]Transaction, error)
 	GetTransactionsByUserID(userID int) ([]Transaction, error)
+	CreateTransaction(input CreateTransactionInput) (Transaction, error)
 }
 
 type service struct {
@@ -42,4 +44,21 @@ func (s *service) GetTransactionsByUserID(userID int) ([]Transaction, error) {
 		return transactions, err
 	}
 	return transactions, nil
+}
+
+func (s *service) CreateTransaction(input CreateTransactionInput) (Transaction, error) {
+	newTransaction := Transaction{
+		CampaignID: input.CampaignID,
+		UserID:     input.User.ID,
+		Amount:     input.Amount,
+		Status:     "PENDING",
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
+	}
+
+	insertedTransaction, err := s.repository.Create(newTransaction)
+	if err != nil {
+		return insertedTransaction, err
+	}
+	return insertedTransaction, err
 }
