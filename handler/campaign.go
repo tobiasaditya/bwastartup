@@ -5,6 +5,7 @@ import (
 	"bwastartup/campaign"
 	"bwastartup/helper"
 	"bwastartup/user"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -96,4 +97,47 @@ func (h *campaignHandler) CreateCampaign(c *gin.Context) {
 	response := helper.APIResponse("Success create new campaign", http.StatusOK, "success", campaign)
 	c.JSON(http.StatusOK, response)
 
+}
+
+func (h *campaignHandler) UpdateCampaign(c *gin.Context) {
+	campaignID := campaign.GetCampaignDetailInput{}
+	updateCampaignData := campaign.CreateCampaignInput{}
+
+	err := c.ShouldBindUri(&campaignID)
+	if err != nil {
+		errors := helper.ErrorValidationResponse(err)
+
+		errorMessage := gin.H{"errors": errors}
+
+		response := helper.APIResponse("Invalid Input", http.StatusUnprocessableEntity, "failed", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+	err = c.ShouldBindJSON(&updateCampaignData)
+	if err != nil {
+		errors := helper.ErrorValidationResponse(err)
+
+		errorMessage := gin.H{"errors": errors}
+
+		response := helper.APIResponse("Invalid Input", http.StatusUnprocessableEntity, "failed", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	//Add user
+	currentUser := c.MustGet("currentUser").(user.User)
+	updateCampaignData.User = currentUser
+	fmt.Println("campaign id", campaignID)
+	updatedCampaign, err := h.service.UpdateCampaign(campaignID.ID, updateCampaignData)
+
+	if err != nil {
+		errorMessage := gin.H{"errors": err.Error()}
+
+		response := helper.APIResponse("Failed to update campaign", http.StatusBadRequest, "failed", errorMessage)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+	campaign := campaign.FormatCampaign(updatedCampaign)
+	response := helper.APIResponse("Success update existing campaign", http.StatusOK, "success", campaign)
+	c.JSON(http.StatusOK, response)
 }

@@ -1,7 +1,9 @@
 package campaign
 
 import (
+	"errors"
 	"fmt"
+	"time"
 
 	"github.com/gosimple/slug"
 )
@@ -10,6 +12,7 @@ type Service interface {
 	GetCampaigns(userID int) ([]Campaign, error)
 	GetCampaign(ID int) (Campaign, error)
 	CreateCampaign(inputCampaign CreateCampaignInput) (Campaign, error)
+	UpdateCampaign(ID int, updateCampaign CreateCampaignInput) (Campaign, error)
 }
 
 type service struct {
@@ -66,4 +69,33 @@ func (s *service) CreateCampaign(inputCampaign CreateCampaignInput) (Campaign, e
 	}
 
 	return insertedCampaign, err
+}
+
+func (s *service) UpdateCampaign(ID int, updateCampaign CreateCampaignInput) (Campaign, error) {
+	foundCampaign, err := s.repository.FindByID(ID)
+
+	if err != nil {
+		return foundCampaign, err
+	}
+
+	//Validasi user, usernya ga boleh beda dengan yang buat campaign
+	if foundCampaign.UserId != updateCampaign.User.ID {
+		return foundCampaign, errors.New("User can't update this campaign")
+	}
+
+	foundCampaign.Name = updateCampaign.Name
+	foundCampaign.Description = updateCampaign.Description
+	foundCampaign.ShortDescription = updateCampaign.ShortDescription
+	foundCampaign.GoalAmount = updateCampaign.GoalAmount
+	foundCampaign.Perks = updateCampaign.Perks
+	foundCampaign.UpdatedAt = time.Now()
+
+	updatedCampaign, err := s.repository.Update(foundCampaign)
+
+	if err != nil {
+		return updatedCampaign, err
+	}
+
+	return updatedCampaign, nil
+
 }
